@@ -1,5 +1,7 @@
 // Camera.js
 
+// Manages views and projection matrices, and camera movement 
+
 class Camera {
     constructor() {
         this.fov = 60;
@@ -11,7 +13,7 @@ class Camera {
         this.projectionMatrix = new Matrix4();
 
         this.speed = 0.15;
-        this.alpha = 3; // rotation degrees per key press
+        this.alpha = 3;
 
         this.updateView();
         this.updateProjection();
@@ -39,7 +41,6 @@ class Camera {
         var f = new Vector3();
         f.set(this.at);
         f.sub(this.eye);
-        // only move on xz plane, dont fly up/down
         f.elements[1] = 0;
         f.normalize();
         f.mul(this.speed);
@@ -117,8 +118,9 @@ class Camera {
         f.set(this.at);
         f.sub(this.eye);
 
-        // clamp vertical look so you cant flip upside down or look straight up/down
-        // compute current pitch angle
+        // Verticle clamping to prevent flipping upside down
+        // Cannot go beyond 60 degrees up or down
+
         var horizLen = Math.sqrt(f.elements[0] * f.elements[0] + f.elements[2] * f.elements[2]);
         var currentPitch = Math.atan2(f.elements[1], horizLen) * 180 / Math.PI;
 
