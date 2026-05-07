@@ -1,5 +1,5 @@
 // Map.js
-// 32x32 world map - each number is the wall height (0-4)
+// 32x32 world map 
 // 0 = no wall, 1-4 = wall height in blocks
 
 // prettier-ignore
