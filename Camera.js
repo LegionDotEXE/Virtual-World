@@ -1,7 +1,5 @@
 // Camera.js
 
-// WASD movements and mouse vertical look for a first-person camera
-
 class Camera {
     constructor() {
         this.fov = 60;
@@ -12,8 +10,8 @@ class Camera {
         this.viewMatrix = new Matrix4();
         this.projectionMatrix = new Matrix4();
 
-        this.speed = 0.2;
-        this.alpha = 3;   
+        this.speed = 0.15;
+        this.alpha = 3; // rotation degrees per key press
 
         this.updateView();
         this.updateProjection();
@@ -23,8 +21,7 @@ class Camera {
         this.viewMatrix.setLookAt(
         this.eye.elements[0], this.eye.elements[1], this.eye.elements[2],
         this.at.elements[0], this.at.elements[1], this.at.elements[2],
-        this.up.elements[0], this.up.elements[1], this.up.elements[2],
-        //this.up.elements[2], this.up.elemetns[1], this.up.elements[0]
+        this.up.elements[0], this.up.elements[1], this.up.elements[2]
         );
     }
 
@@ -42,6 +39,8 @@ class Camera {
         var f = new Vector3();
         f.set(this.at);
         f.sub(this.eye);
+        // only move on xz plane, dont fly up/down
+        f.elements[1] = 0;
         f.normalize();
         f.mul(this.speed);
         this.eye.add(f);
@@ -53,6 +52,8 @@ class Camera {
         var b = new Vector3();
         b.set(this.eye);
         b.sub(this.at);
+        // only move on xz plane
+        b.elements[1] = 0;
         b.normalize();
         b.mul(this.speed);
         this.eye.add(b);
@@ -66,6 +67,8 @@ class Camera {
         f.sub(this.eye);
 
         var s = Vector3.cross(this.up, f);
+        // only move on xz plane
+        s.elements[1] = 0;
         s.normalize();
         s.mul(this.speed);
         this.eye.add(s);
@@ -79,6 +82,8 @@ class Camera {
         f.sub(this.eye);
 
         var s = Vector3.cross(f, this.up);
+        // only move on xz plane
+        s.elements[1] = 0;
         s.normalize();
         s.mul(this.speed);
         this.eye.add(s);
@@ -106,11 +111,20 @@ class Camera {
         this.panLeft(-deg);
     }
 
-    // for mouse look
+    // for mouse look - rotate up/down with clamping
     panUp(degrees) {
         var f = new Vector3();
         f.set(this.at);
         f.sub(this.eye);
+
+        // clamp vertical look so you cant flip upside down or look straight up/down
+        // compute current pitch angle
+        var horizLen = Math.sqrt(f.elements[0] * f.elements[0] + f.elements[2] * f.elements[2]);
+        var currentPitch = Math.atan2(f.elements[1], horizLen) * 180 / Math.PI;
+
+        // clamp between -60 and 60 degrees
+        if (currentPitch + degrees > 60) degrees = 60 - currentPitch;
+        if (currentPitch + degrees < -60) degrees = -60 - currentPitch;
 
         // get the right vector to rotate around
         var right = Vector3.cross(f, this.up);
