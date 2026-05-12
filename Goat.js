@@ -5,7 +5,7 @@
 class Goat {
   constructor() {
     this.position = [0, 0, 0]; // world position
-    this.rotation = 0;         // y-axis rotation in degrees
+    this.rotation = 0;       
     this.scale = 1.0;
     this.animation = true;
     this.seconds = 0;
@@ -52,7 +52,7 @@ class Goat {
     this.tailAngle = 20 * Math.sin(seconds * 6);
   }
 
-  // draw a single leg with 3 joints (upper, lower, hoof)
+  // function to draw a leg with 3 segments (upper, lower, hoof)
   drawLeg(baseM, upperAngle, lowerAngle, hoofAngle, xOff, zOff) {
     // Upper leg attaches to bottom of body
     var upperM = new Matrix4(baseM);
@@ -95,10 +95,7 @@ class Goat {
   }
 
   render() {
-
-    // gentle idle bob
-    //base.translate(0, 0.02 * Math.sin(this.seconds * 2), 0);
-    // base matrix: position + rotation + scale in world
+    // Base transformation for the whole goat
     function goatBase(pos, rot, scl) {
       var m = new Matrix4();
       m.translate(pos[0], pos[1], pos[2]);
@@ -120,7 +117,7 @@ class Goat {
 
     // Head
     var headM = new Matrix4(base);
-    headM.translate(0.25, 0.1, 0);        // front of body, slightly up
+    headM.translate(0.25, 0.1, 0);     
     headM.rotate(parseFloat(this.headAngle), 0, 0, 1);
 
     var head = new Cube();
@@ -199,7 +196,7 @@ class Goat {
     tail.matrix.scale(0.12, 0.05, 0.05);
     tail.render();
 
-    // --- LEGS (4 legs, each 3 levels deep) ---
+    // LEGS (4 legs, each 3 levels deep)
     // Body goes from x: -0.25 to 0.25, y: -0.05, z: -0.15 to 0.15
 
     var legBase = new Matrix4(base);
