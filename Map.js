@@ -41,22 +41,28 @@ var g_map = [
 // location of the lost baby goat (hidden in a room)
 var g_kidLocation = [25, 25]; // map x, z
 
-// draw all the walls from the map
+// shared cube for drawing walls - reuse instead of creating new ones each frame
+var g_wallCube = null;
+
 function drawMap() {
+  // reuse one cube object for all walls
+  if (g_wallCube === null) {
+    g_wallCube = new Cube();
+  }
+
   for (var x = 0; x < 32; x++) {
     for (var z = 0; z < 32; z++) {
       var height = g_map[x][z];
       if (height > 0) {
         for (var y = 0; y < height; y++) {
-          var wall = new Cube();
           // use different textures based on height
           if (y == 0) {
-            wall.textureNum = 2; // stone at bottom
+            g_wallCube.textureNum = 2; // stone at bottom
           } else {
-            wall.textureNum = 1; // wall texture above
+            g_wallCube.textureNum = 1; // wall texture above
           }
-          wall.matrix.translate(x - 16, y, z - 16); // center the map around origin
-          wall.render();
+          g_wallCube.matrix.setTranslate(x - 16, y, z - 16);
+          g_wallCube.render();
         }
       }
     }
