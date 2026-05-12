@@ -95,6 +95,9 @@ class Goat {
   }
 
   render() {
+
+    // gentle idle bob
+    //base.translate(0, 0.02 * Math.sin(this.seconds * 2), 0);
     // base matrix: position + rotation + scale in world
     function goatBase(pos, rot, scl) {
       var m = new Matrix4();
