@@ -1,6 +1,7 @@
 // Map.js
 // 32x32 world map 
-// 0 = no wall, 1-4 = wall height in blocks
+
+// As planned, 0 = no wall, 1-4 = wall height in blocks
 
 // prettier-ignore
 var g_map = [
@@ -38,10 +39,10 @@ var g_map = [
   [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],
 ];
 
-// location of the lost baby goat (hidden in a room)
-var g_kidLocation = [25, 25]; // map x, z
+// kid's starting location
+var g_kidLocation = [25, 25]; 
 
-// shared cube for drawing walls - reuse instead of creating new ones each frame
+// shared cube for drawing walls
 var g_wallCube = null;
 
 function drawMap() {
@@ -55,7 +56,6 @@ function drawMap() {
       var height = g_map[x][z];
       if (height > 0) {
         for (var y = 0; y < height; y++) {
-          // use different textures based on height
           if (y == 0) {
             g_wallCube.textureNum = 2; // stone at bottom
           } else {
