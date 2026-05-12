@@ -1,8 +1,13 @@
 // World.js
-// Main file - shaders, setup, render loop, input handlers
+// Main file that sets up WebGL, loads textures, and contains the main render loop
 
-    // Vertex shader
-    var VSHADER_SOURCE =
+// Added a story line and a lost baby goat to find in the world, with a reunion message when you find it.
+
+// Baby goat follows you after you find it. Awesome??
+
+
+// Vertex shader
+var VSHADER_SOURCE =
     'attribute vec4 a_Position;\n' +
     'attribute vec2 a_UV;\n' +
     'varying vec2 v_UV;\n' +
@@ -14,8 +19,8 @@
     '  v_UV = a_UV;\n' +
     '}\n';
 
-    // Fragment shader
-    var FSHADER_SOURCE =
+// Fragment shader
+var FSHADER_SOURCE =
     'precision mediump float;\n' +
     'varying vec2 v_UV;\n' +
     'uniform vec4 u_FragColor;\n' +
@@ -27,56 +32,57 @@
     'uniform int u_whichTexture;\n' +
     'void main() {\n' +
     '  if (u_whichTexture == -1) {\n' +
-    '    gl_FragColor = u_FragColor;\n' +             // solid color
+    '    gl_FragColor = u_FragColor;\n' +
     '  } else if (u_whichTexture == 0) {\n' +
-    '    gl_FragColor = texture2D(u_Sampler0, v_UV);\n' + // grass
+    '    gl_FragColor = texture2D(u_Sampler0, v_UV);\n' +
     '  } else if (u_whichTexture == 1) {\n' +
-    '    gl_FragColor = texture2D(u_Sampler1, v_UV);\n' + // wall
+    '    gl_FragColor = texture2D(u_Sampler1, v_UV);\n' +
     '  } else if (u_whichTexture == 2) {\n' +
-    '    gl_FragColor = texture2D(u_Sampler2, v_UV);\n' + // stone
+    '    gl_FragColor = texture2D(u_Sampler2, v_UV);\n' +
     '  } else if (u_whichTexture == 3) {\n' +
-    '    gl_FragColor = texture2D(u_Sampler3, v_UV);\n' + // sky
+    '    gl_FragColor = texture2D(u_Sampler3, v_UV);\n' +
     '  } else if (u_whichTexture == 4) {\n' +
-    '    gl_FragColor = texture2D(u_Sampler4, v_UV);\n' + // sand
+    '    gl_FragColor = texture2D(u_Sampler4, v_UV);\n' +
     '  } else {\n' +
-    '    gl_FragColor = vec4(1, 0.2, 0.2, 1);\n' +   // error red
+    '    gl_FragColor = vec4(1, 0.2, 0.2, 1);\n' +
     '  }\n' +
     '}\n';
 
-    // WebGL globals
-    let canvas;
-    let gl;
-    let a_Position;
-    let a_UV;
-    let u_FragColor;
-    let u_ModelMatrix;
-    let u_ViewMatrix;
-    let u_ProjectionMatrix;
-    let u_whichTexture;
-    let u_Sampler0;
-    let u_Sampler1;
-    let u_Sampler2;
-    let u_Sampler3;
-    let u_Sampler4;
+// WebGL globals
+let canvas;
+let gl;
+let a_Position;
+let a_UV;
+let u_FragColor;
+let u_ModelMatrix;
+let u_ViewMatrix;
+let u_ProjectionMatrix;
+let u_whichTexture;
+let u_Sampler0;
+let u_Sampler1;
+let u_Sampler2;
+let u_Sampler3;
+let u_Sampler4;
 
-    // Camera
-    var camera;
+// Camera
+var camera;
 
-    // Goat
-    var g_goat;
-    var g_babyGoat;
-    var g_foundKid = false;
+// Goat
+// var g_goat;
+var g_babyGoat;
+var g_foundKid = false;
+// var g_reunionProgress = 0;
 
-    // Time
-    var g_startTime = performance.now() / 1000.0;
-    var g_seconds = 0;
+// Time
+var g_startTime = performance.now() / 1000.0;
+var g_seconds = 0;
 
-    // Mouse
-    var g_mouseDown = false;
-    var g_lastMouseX = 0;
-    var g_lastMouseY = 0;
+// Mouse
+var g_mouseDown = false;
+var g_lastMouseX = 0;
+var g_lastMouseY = 0;
 
-    function setupWebGL() {
+function setupWebGL() {
     canvas = document.getElementById('webgl');
     gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
     if (!gl) {
@@ -84,19 +90,16 @@
         return;
     }
     gl.enable(gl.DEPTH_TEST);
-
-    // resize canvas to fill window
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     gl.viewport(0, 0, canvas.width, canvas.height);
-    }
+}
 
-    function connectVariablesToGLSL() {
+function connectVariablesToGLSL() {
     if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
         console.log('Failed to initialize shaders.');
         return;
     }
-
     a_Position = gl.getAttribLocation(gl.program, 'a_Position');
     a_UV = gl.getAttribLocation(gl.program, 'a_UV');
     u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
@@ -109,188 +112,188 @@
     u_Sampler2 = gl.getUniformLocation(gl.program, 'u_Sampler2');
     u_Sampler3 = gl.getUniformLocation(gl.program, 'u_Sampler3');
     u_Sampler4 = gl.getUniformLocation(gl.program, 'u_Sampler4');
-    }
+}
 
-    // --- Texture Loading ---
-
-    function initTextures() {
-    // load each texture into its own texture unit
+// --- Texture Loading ---
+function initTextures() {
     loadTexture('textures/grass.png', 0);
     loadTexture('textures/wall.png', 1);
     loadTexture('textures/stone.png', 2);
     loadTexture('textures/sky.png', 3);
     loadTexture('textures/sand.png', 4);
-    }
+}
 
-    function loadTexture(path, texUnit) {
+function loadTexture(path, texUnit) {
     var texture = gl.createTexture();
     if (!texture) {
         console.log('Failed to create texture object for ' + path);
         return;
     }
-
     var image = new Image();
     image.onload = function() {
-        // flip image y axis
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-
-        // activate the right texture unit
         gl.activeTexture(gl.TEXTURE0 + texUnit);
-
-        // bind the texture
         gl.bindTexture(gl.TEXTURE_2D, texture);
-
-        // set texture parameters
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-
-        // send image to GPU
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-
-        // tell the shader which sampler to use
         if (texUnit == 0) gl.uniform1i(u_Sampler0, 0);
         if (texUnit == 1) gl.uniform1i(u_Sampler1, 1);
         if (texUnit == 2) gl.uniform1i(u_Sampler2, 2);
         if (texUnit == 3) gl.uniform1i(u_Sampler3, 3);
         if (texUnit == 4) gl.uniform1i(u_Sampler4, 4);
-
         console.log('Loaded texture: ' + path);
     };
     image.src = path;
-    }
+}
+// --- Collision Detection ---
+function canMoveTo(x, z) {
+  // convert world coords to map coords
+  var mapX = Math.floor(x + 16);
+  var mapZ = Math.floor(z + 16);
 
-    // --- Keyboard Input ---
+  // keep inside map bounds
+  if (mapX < 0 || mapX >= 32 || mapZ < 0 || mapZ >= 32) return false;
 
-    function setupKeyHandlers() {
+  // check if there's a wall at that spot
+  if (g_map[mapX][mapZ] > 0) return false;
+
+  return true;
+}
+
+// --- Keyboard Input ---
+function setupKeyHandlers() {
     document.onkeydown = function(ev) {
+        // save old position in case we need to undo
+        var oldEyeX = camera.eye.elements[0];
+        var oldEyeZ = camera.eye.elements[2];
+        var oldAtX = camera.at.elements[0];
+        var oldAtZ = camera.at.elements[2];
+
         switch(ev.key) {
-        case 'w': case 'W': camera.moveForward();  break;
-        case 's': case 'S': camera.moveBackwards(); break;
-        case 'a': case 'A': camera.moveLeft();      break;
-        case 'd': case 'D': camera.moveRight();     break;
-        case 'q': case 'Q': camera.panLeft();       break;
-        case 'e': case 'E': camera.panRight();      break;
+            case 'w': case 'W': camera.moveForward();  break;
+            case 's': case 'S': camera.moveBackwards(); break;
+            case 'a': case 'A': camera.moveLeft();      break;
+            case 'd': case 'D': camera.moveRight();     break;
+            case 'q': case 'Q': camera.panLeft();       break;
+            case 'e': case 'E': camera.panRight();      break;
+        }
+
+        // collision check - if we moved into a wall, undo the move
+        if (!canMoveTo(camera.eye.elements[0], camera.eye.elements[2])) {
+            camera.eye.elements[0] = oldEyeX;
+            camera.eye.elements[2] = oldEyeZ;
+            camera.at.elements[0] = oldAtX;
+            camera.at.elements[2] = oldAtZ;
+            camera.updateView();
         }
     };
-    }
+}
 
-    // --- Mouse Input ---
-
-    function setupMouseHandlers() {
+// --- Mouse Input ---
+function setupMouseHandlers() {
     canvas.onmousedown = function(ev) {
-        // shift+click to remove block, regular click to add block
         if (ev.shiftKey) {
-        removeBlock();
+            removeBlock();
         } else {
-        addBlock();
+            addBlock();
         }
-        // also start mouse look
         g_mouseDown = true;
         g_lastMouseX = ev.clientX;
         g_lastMouseY = ev.clientY;
     };
-
     canvas.onmouseup = function(ev) {
         g_mouseDown = false;
     };
-
     canvas.onmousemove = function(ev) {
         if (!g_mouseDown) return;
         var dx = ev.clientX - g_lastMouseX;
         var dy = ev.clientY - g_lastMouseY;
-
-        // rotate camera based on mouse movement
-        camera.panLeft(dx * 0.2);
-        camera.panUp(dy * 0.2);
-
+        // Reduced sensitivity for better control
+        camera.panLeft(dx * 0.1); 
+        camera.panUp(dy * 0.1);   
         g_lastMouseX = ev.clientX;
         g_lastMouseY = ev.clientY;
     };
-
-    // also support pointer lock for smoother mouse look
     canvas.onclick = function() {
         canvas.requestPointerLock();
     };
-
     document.addEventListener('pointerlockchange', function() {
         if (document.pointerLockElement === canvas) {
-        document.onmousemove = function(ev) {
-            camera.panLeft(ev.movementX * 0.15);
-            camera.panUp(ev.movementY * 0.15);
-        };
+            document.onmousemove = function(ev) {
+                camera.panLeft(ev.movementX * 0.1); 
+                camera.panUp(ev.movementY * 0.1);   
+            };
         } else {
-        document.onmousemove = null;
+            document.onmousemove = null;
         }
     });
-    }
+}
 
-    // --- Add/Delete Blocks ---
-
-    function getBlockInFront() {
-    // figure out which map cell is right in front of the camera
+// --- Add/Delete Blocks ---
+function getBlockInFront() {
     var f = new Vector3();
     f.set(camera.at);
     f.sub(camera.eye);
     f.normalize();
-    f.mul(2); // look 2 units ahead
-
+    f.mul(2); 
     var targetX = Math.floor(camera.eye.elements[0] + f.elements[0] + 16);
     var targetZ = Math.floor(camera.eye.elements[2] + f.elements[2] + 16);
-
-    // clamp to map bounds
     targetX = Math.max(0, Math.min(31, targetX));
     targetZ = Math.max(0, Math.min(31, targetZ));
-
     return [targetX, targetZ];
-    }
+}
 
-    function addBlock() {
+function addBlock() {
     var pos = getBlockInFront();
     var x = pos[0];
     var z = pos[1];
     if (g_map[x][z] < 4) {
         g_map[x][z] += 1;
     }
-    }
+}
 
-    function removeBlock() {
+function removeBlock() {
     var pos = getBlockInFront();
     var x = pos[0];
     var z = pos[1];
     if (g_map[x][z] > 0) {
         g_map[x][z] -= 1;
     }
-    }
+}
 
-    // --- Story: Check if player found the kid ---
+// --- Story: Check if player found the kid ---
+function checkStory() {
+    if (g_foundKid) return;
 
-    function checkStory() {
-    var px = Math.floor(camera.eye.elements[0] + 16);
-    var pz = Math.floor(camera.eye.elements[2] + 16);
+    var px = camera.eye.elements[0];
+    var pz = camera.eye.elements[2];
 
-    var kx = g_kidLocation[0];
-    var kz = g_kidLocation[1];
+    var kx = g_babyGoat.position[0];
+    var kz = g_babyGoat.position[2];
 
-    var dist = Math.sqrt((px - kx) * (px - kx) + (pz - kz) * (pz - kz));
+    var dx = px - kx;
+    var dz = pz - kz;
+    var dist = Math.sqrt(dx * dx + dz * dz);
 
-    if (dist < 2 && !g_foundKid) {
+    document.getElementById('hud').innerHTML = "Dist to kid: " + dist.toFixed(1);
+
+    if (dist < 1.5) {
         g_foundKid = true;
         document.getElementById('story').innerHTML = "You found the Lost Kid!";
+        document.getElementById('story').style.color = "#00FF00";
 
-        // fade out message after 3 seconds
         setTimeout(function() {
-        document.getElementById('story').innerHTML = "";
-        }, 3000);
+            document.getElementById('story').innerHTML = "";
+        }, 5000);
     }
-    }
+}
 
-    // --- Render Scene ---
-
-    function renderScene() {
+// --- Render Scene ---
+function renderScene() {
     var startTime = performance.now();
 
-    // pass camera matrices to shader
     gl.uniformMatrix4fv(u_ViewMatrix, false, camera.viewMatrix.elements);
     gl.uniformMatrix4fv(u_ProjectionMatrix, false, camera.projectionMatrix.elements);
 
@@ -299,7 +302,7 @@
     // --- Sky ---
     var sky = new Cube();
     sky.color = [0.5, 0.7, 1.0, 1.0];
-    sky.textureNum = 3; // sky texture
+    sky.textureNum = 3; 
     sky.matrix.setTranslate(-50, -50, -50);
     sky.matrix.scale(100, 100, 100);
     sky.render();
@@ -307,98 +310,92 @@
     // --- Ground ---
     var ground = new Cube();
     ground.color = [0.4, 0.8, 0.3, 1.0];
-    ground.textureNum = 0; // grass texture
-    ground.matrix.setTranslate(-16, -0.01, -16);
-    ground.matrix.scale(32, 0, 32);
+    ground.textureNum = 0; 
+    ground.matrix.setTranslate(-16, -0.05, -16); 
+    ground.matrix.scale(32, 0.1, 32); 
     ground.render();
 
-    // --- Sand path under ground (second ground layer) ---
+    // --- Sand path ---
     var sand = new Cube();
     sand.color = [0.9, 0.85, 0.6, 1.0];
-    sand.textureNum = 4; // sand texture
-    sand.matrix.setTranslate(-16, -0.02, -16);
-    sand.matrix.scale(32, 0, 32);
+    sand.textureNum = 4; 
+    sand.matrix.setTranslate(-16, -0.06, -16);
+    sand.matrix.scale(32, 0.1, 32);
     sand.render();
 
-    // --- Walls from map ---
+    // --- Walls ---
     drawMap();
 
-    // --- Golden block (the lost kid marker) ---
-    if (!g_foundKid) {
-        var marker = new Cube();
-        marker.color = [1.0, 0.85, 0.0, 1.0];
-        marker.textureNum = -1; // solid gold color
-        marker.matrix.setTranslate(g_kidLocation[0] - 16, 0, g_kidLocation[1] - 16);
-        marker.matrix.scale(0.5, 0.5, 0.5);
-        // make it bob up and down
-        marker.matrix.translate(0, 0.3 + 0.2 * Math.sin(g_seconds * 3), 0);
-        marker.render();
-    }
+    // --- Baby Goat (the lost kid) ---
+    // always render it, but before finding it stays at hidden spot
+    // after finding it follows the player
+    g_babyGoat.updateAnimation(g_seconds);
 
-    // --- Mother Goat ---
-    g_goat.updateAnimation(g_seconds);
-    g_goat.render();
-
-    // --- Baby Goat (appears after found) ---
     if (g_foundKid) {
-        g_babyGoat.updateAnimation(g_seconds);
-        g_babyGoat.render();
+        // follow the player at a distance
+        var followDist = 2.0;
+        var px = camera.eye.elements[0];
+        var pz = camera.eye.elements[2];
+
+        var dx = px - g_babyGoat.position[0];
+        var dz = pz - g_babyGoat.position[2];
+        var dist = Math.sqrt(dx * dx + dz * dz);
+
+        if (dist > followDist) {
+            g_babyGoat.position[0] += dx * 0.03;
+            g_babyGoat.position[2] += dz * 0.03;
+            // face the player
+            g_babyGoat.rotation = Math.atan2(dx, dz) * 180 / Math.PI;
+        }
     }
 
-    // check story progress
+    g_babyGoat.render();
+
     checkStory();
 
-    // Performance display
     var duration = performance.now() - startTime;
     sendTextToHTML("ms: " + Math.floor(duration) + "  fps: " + Math.floor(1000 / duration), "perf");
-    }
+}
 
-    function sendTextToHTML(text, htmlID) {
+function sendTextToHTML(text, htmlID) {
     var htmlElm = document.getElementById(htmlID);
     if (!htmlElm) return;
     htmlElm.innerHTML = text;
-    }
+}
 
-    // --- Animation Loop ---
-
-    function tick() {
+// --- Animation Loop ---
+function tick() {
     g_seconds = performance.now() / 1000.0 - g_startTime;
     renderScene();
     requestAnimationFrame(tick);
-    }
+}
 
-    // --- Main ---
-
-    function main() {
+// --- Main ---
+function main() {
     setupWebGL();
     connectVariablesToGLSL();
-
     initTextures();
-
     setupKeyHandlers();
     setupMouseHandlers();
 
-    // create camera - start position in the open area
+    // Create camera
     camera = new Camera();
     camera.eye = new Vector3([2, 0.5, 2]);
     camera.at = new Vector3([2, 0.5, 1]);
     camera.updateView();
 
-    // create mother goat - placed in the world
-    g_goat = new Goat();
-    g_goat.position = [5, 0.35, -5];
-    g_goat.rotation = 45;
-    g_goat.scale = 2.0;
-
-    // create baby goat - hidden until found
+    // Create baby goat - placed in an open area, not inside a wall
+    // g_kidLocation is [25,25] in map coords, which is 25-16=9 in world coords
     g_babyGoat = new Goat();
-    g_babyGoat.position = [5.5, 0.2, -4.5];
-    g_babyGoat.rotation = 30;
-    g_babyGoat.scale = 1.0;
+    g_babyGoat.position = [10, 0.15, 10];
+    g_babyGoat.rotation = 0;
+    g_babyGoat.scale = 1.2;
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
-    tick();
-    }
+    document.getElementById('story').innerHTML = "Find the Lost Kid!";
 
-    main();
+    tick();
+}
+
+main();
