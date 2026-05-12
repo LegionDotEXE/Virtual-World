@@ -112,7 +112,7 @@ class Camera {
         this.panLeft(-deg);
     }
 
-    // for mouse look - rotate up/down with clamping
+    // Vertical panning
     panUp(degrees) {
         var f = new Vector3();
         f.set(this.at);
